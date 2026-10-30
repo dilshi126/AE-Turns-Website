@@ -11,7 +11,7 @@ import {
 import { type IconName } from "./content";
 import { useSiteContent } from "./site-content";
 
-const statisticIcons: IconName[] = ["clock", "chart", "people", "layers"];
+const statisticIcons: IconName[] = ["chart", "people", "layers"];
 
 function AnimatedStatistic({ value }: { value: string }) {
   const statisticRef = useRef<HTMLElement>(null);
@@ -37,8 +37,9 @@ function AnimatedStatistic({ value }: { value: string }) {
       maximumFractionDigits: fractionDigits,
       useGrouping: rawNumber.includes(","),
     });
+    const displaySuffix = suffix.startsWith("+") ? suffix : `+${suffix}`;
     const format = (number: number) =>
-      `${prefix}${numberFormatter.format(number)}${suffix}`;
+      `${prefix}${numberFormatter.format(number)}${displaySuffix}`;
     const reducedMotion = window.matchMedia(
       "(prefers-reduced-motion: reduce)",
     ).matches;
@@ -47,12 +48,12 @@ function AnimatedStatistic({ value }: { value: string }) {
 
     const animate = () => {
       if (reducedMotion) {
-        setDisplayValue(value);
+        setDisplayValue(format(target));
         return;
       }
 
       const startTime = performance.now();
-      const duration = 1400;
+      const duration = 3000;
       const tick = (now: number) => {
         const progress = Math.min((now - startTime) / duration, 1);
         const easedProgress = 1 - (1 - progress) ** 3;
@@ -63,7 +64,7 @@ function AnimatedStatistic({ value }: { value: string }) {
         if (progress < 1) {
           frame = window.requestAnimationFrame(tick);
         } else {
-          setDisplayValue(value);
+          setDisplayValue(format(target));
         }
       };
       frame = window.requestAnimationFrame(tick);
@@ -175,21 +176,26 @@ export function HomePage() {
           <p>Our story began in 2021. Project, customer and solution figures will be shared when confirmed by the AE Turns Administration.</p>
         </div>
         <div className="highlights-grid">
-          {content.statistics.map((statistic, index) => (
-            <article
-              className={index === 0 ? "highlight-card highlight-established reveal" : "highlight-card reveal"}
-              key={statistic.label}
-            >
-              <span className="highlight-mark">
-                <Icon
-                  name={statisticIcons[index % statisticIcons.length]}
-                  size={21}
-                />
-              </span>
-              <AnimatedStatistic value={statistic.value} />
-              <span>{statistic.label}</span>
-            </article>
-          ))}
+          {content.statistics
+            .filter(
+              (statistic) =>
+                !statistic.label.trim().toLowerCase().startsWith("established"),
+            )
+            .map((statistic, index) => (
+              <article
+                className="highlight-card reveal"
+                key={statistic.label}
+              >
+                <span className="highlight-mark">
+                  <Icon
+                    name={statisticIcons[index % statisticIcons.length]}
+                    size={21}
+                  />
+                </span>
+                <AnimatedStatistic value={statistic.value} />
+                <span>{statistic.label}</span>
+              </article>
+            ))}
         </div>
       </section>
 

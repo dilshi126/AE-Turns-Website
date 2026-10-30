@@ -312,7 +312,7 @@ em { color: var(--teal); font-style: normal; }
   line-height: 1.18;
 }
 .section-heading > p { max-width: 355px; margin: 0 5px 3px 0; color: var(--muted); font-size: 12px; line-height: 1.85; }
-.highlights-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 13px; }
+.highlights-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 13px; }
 .highlight-card {
   display: flex;
   min-height: 154px;
