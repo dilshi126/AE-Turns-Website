@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import {
   Breadcrumbs,
@@ -12,6 +12,91 @@ import { type IconName } from "./content";
 import { useSiteContent } from "./site-content";
 
 const statisticIcons: IconName[] = ["clock", "chart", "people", "layers"];
+
+function AnimatedStatistic({ value }: { value: string }) {
+  const statisticRef = useRef<HTMLElement>(null);
+  const [displayValue, setDisplayValue] = useState(value);
+
+  useEffect(() => {
+    const match = /^([^0-9]*)(\d[\d,]*(?:\.\d+)?)(.*)$/.exec(value);
+    if (!match) {
+      setDisplayValue(value);
+      return;
+    }
+
+    const [, prefix, rawNumber, suffix] = match;
+    const target = Number(rawNumber.replaceAll(",", ""));
+    if (!Number.isFinite(target)) {
+      setDisplayValue(value);
+      return;
+    }
+
+    const fractionDigits = rawNumber.split(".")[1]?.length ?? 0;
+    const numberFormatter = new Intl.NumberFormat(undefined, {
+      minimumFractionDigits: fractionDigits,
+      maximumFractionDigits: fractionDigits,
+      useGrouping: rawNumber.includes(","),
+    });
+    const format = (number: number) =>
+      `${prefix}${numberFormatter.format(number)}${suffix}`;
+    const reducedMotion = window.matchMedia(
+      "(prefers-reduced-motion: reduce)",
+    ).matches;
+    let frame = 0;
+    let observer: IntersectionObserver | undefined;
+
+    const animate = () => {
+      if (reducedMotion) {
+        setDisplayValue(value);
+        return;
+      }
+
+      const startTime = performance.now();
+      const duration = 1400;
+      const tick = (now: number) => {
+        const progress = Math.min((now - startTime) / duration, 1);
+        const easedProgress = 1 - (1 - progress) ** 3;
+        const animatedNumber =
+          Math.round(target * easedProgress * 10 ** fractionDigits) /
+          10 ** fractionDigits;
+        setDisplayValue(format(animatedNumber));
+        if (progress < 1) {
+          frame = window.requestAnimationFrame(tick);
+        } else {
+          setDisplayValue(value);
+        }
+      };
+      frame = window.requestAnimationFrame(tick);
+    };
+
+    setDisplayValue(format(0));
+    if (!("IntersectionObserver" in window)) {
+      animate();
+    } else {
+      observer = new IntersectionObserver(
+        ([entry]) => {
+          if (entry.isIntersecting) {
+            observer?.disconnect();
+            animate();
+          }
+        },
+        { threshold: 0.25 },
+      );
+      if (statisticRef.current) observer.observe(statisticRef.current);
+    }
+
+    return () => {
+      observer?.disconnect();
+      window.cancelAnimationFrame(frame);
+    };
+  }, [value]);
+
+  return (
+    <strong ref={statisticRef} aria-label={value}>
+      {displayValue}
+    </strong>
+  );
+}
 
 function solutionId(title: string) {
   return title.toLowerCase().replace(/&/g, "").replace(/[^a-z0-9]+/g, "-").replace(/-$/, "");
@@ -101,7 +186,7 @@ export function HomePage() {
                   size={21}
                 />
               </span>
-              <strong>{statistic.value}</strong>
+              <AnimatedStatistic value={statistic.value} />
               <span>{statistic.label}</span>
             </article>
           ))}
