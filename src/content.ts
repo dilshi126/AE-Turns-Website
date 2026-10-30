@@ -6,6 +6,25 @@ export const navigation = [
   { label: "Contact Us", to: "/contact" },
 ] as const;
 
+export type IconName =
+  | "arrow"
+  | "chart"
+  | "check"
+  | "clock"
+  | "code"
+  | "layers"
+  | "location"
+  | "megaphone"
+  | "menu"
+  | "message"
+  | "people"
+  | "phone"
+  | "play"
+  | "spark"
+  | "support"
+  | "target"
+  | "ticket";
+
 export const contact = {
   company: "AE Turns (Pvt) Ltd",
   address: "No 66/A, Udahamulla Road, Nugegoda",

@@ -1,25 +1,7 @@
 import { useEffect, useState, type FormEvent, type ReactNode } from "react";
 import { Link, NavLink, Outlet, useLocation } from "react-router-dom";
-import { contact, navigation, socialLinks } from "./content";
-
-export type IconName =
-  | "arrow"
-  | "chart"
-  | "check"
-  | "clock"
-  | "code"
-  | "layers"
-  | "location"
-  | "megaphone"
-  | "menu"
-  | "message"
-  | "people"
-  | "phone"
-  | "play"
-  | "spark"
-  | "support"
-  | "target"
-  | "ticket";
+import { navigation, type IconName } from "./content";
+import { useSiteContent } from "./site-content";
 
 export function Icon({
   name,
@@ -135,6 +117,7 @@ export function Icon({
 export function SiteLayout() {
   const [menuOpen, setMenuOpen] = useState(false);
   const { pathname, hash } = useLocation();
+  const { content } = useSiteContent();
 
   useEffect(() => {
     setMenuOpen(false);
@@ -170,11 +153,11 @@ export function SiteLayout() {
           <Link
             className="brand"
             to="/"
-            aria-label="AE Turns (Pvt) Ltd home"
+            aria-label={`${content.company.name} home`}
             onClick={() => setMenuOpen(false)}
           >
             <img src="/aeturns-logo.png" alt="AE Turns" />
-            <span className="brand-legal">(Pvt) Ltd</span>
+            <span className="brand-legal">{content.company.name}</span>
           </Link>
           <button
             className="menu-toggle"
@@ -221,6 +204,8 @@ export function SiteLayout() {
 }
 
 export function SiteFooter() {
+  const { content } = useSiteContent();
+
   return (
     <footer className="site-footer">
       <div className="footer-main section-wrap">
@@ -244,13 +229,13 @@ export function SiteFooter() {
         </div>
         <div className="footer-column footer-contact">
           <h2>Contact</h2>
-          <span>{contact.address}</span>
-          <a href={`tel:${contact.phoneLink}`}>{contact.phone}</a>
-          <a href={`mailto:${contact.email}`}>{contact.email}</a>
+          <span>{content.company.address}</span>
+          <a href={`tel:${content.company.phoneLink}`}>{content.company.phone}</a>
+          <a href={`mailto:${content.company.email}`}>{content.company.email}</a>
         </div>
         <div className="footer-column footer-social">
           <h2>Follow along</h2>
-          {socialLinks.map((social) => (
+          {content.socialLinks.map((social) => (
             <a key={social.label} href={social.url} target="_blank" rel="noreferrer">
               {social.label}<span aria-hidden="true"> ↗</span>
             </a>
@@ -258,7 +243,7 @@ export function SiteFooter() {
         </div>
       </div>
       <div className="footer-bottom section-wrap">
-        <span>© 2026 AE Turns (Pvt) Ltd. All Rights Reserved.</span>
+        <span>© {new Date().getFullYear()} {content.company.name}. All Rights Reserved.</span>
         <div className="legal-links">
           <Link to="/privacy">Privacy Policy</Link>
           <Link to="/terms">Terms & Conditions</Link>
@@ -306,10 +291,12 @@ export function SectionLabel({
 }
 
 export function ContactBand() {
+  const { content } = useSiteContent();
+
   return (
     <section className="contact-band section-wrap">
       <div>
-        <span className="eyebrow">Ready when you are</span>
+        <span className="eyebrow">{content.hero.eyebrow}</span>
         <h2>Let’s find your <em>next turn.</em></h2>
         <p>Tell us what you’re looking to achieve. We’d love to hear from you.</p>
       </div>
@@ -339,6 +326,7 @@ export function EmailForm({
 }) {
   const [status, setStatus] = useState("");
   const isContactForm = kind === "contact";
+  const { content } = useSiteContent();
 
   function submitForm(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -374,7 +362,7 @@ export function EmailForm({
         ? `\nCV file selected: ${cv.name}\n\nPlease attach this CV file to the email before sending.`
         : "";
 
-    window.location.href = `mailto:${contact.email}?subject=${encodeURIComponent(
+    window.location.href = `mailto:${content.company.email}?subject=${encodeURIComponent(
       subject,
     )}&body=${encodeURIComponent(
       `${body}${attachmentNote}\n\nReply to: ${email}`,

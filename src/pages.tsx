@@ -8,16 +8,10 @@ import {
   PageHero,
   SectionLabel,
 } from "./components";
-import {
-  contact,
-  operatingAreas,
-  partners,
-  services,
-  solutions,
-  socialLinks,
-  strengths,
-  vacancies,
-} from "./content";
+import { type IconName } from "./content";
+import { useSiteContent } from "./site-content";
+
+const statisticIcons: IconName[] = ["clock", "chart", "people", "layers"];
 
 function solutionId(title: string) {
   return title.toLowerCase().replace(/&/g, "").replace(/[^a-z0-9]+/g, "-").replace(/-$/, "");
@@ -32,9 +26,13 @@ function usePageMeta(title: string, description: string) {
 }
 
 export function HomePage() {
+  const { content } = useSiteContent();
+  const headlineWords = content.hero.headline.split(/\s+/);
+  const headlineSplit = Math.max(1, headlineWords.length - 2);
+
   usePageMeta(
-    "Innovative Digital Solutions for a Smarter Future",
-    "AE Turns delivers innovative technology and digital solutions to improve business operations, customer engagement and digital experiences.",
+    content.hero.headline,
+    content.hero.introduction,
   );
 
   return (
@@ -42,13 +40,12 @@ export function HomePage() {
       <section className="hero" id="home">
         <div className="hero-grid">
           <div className="hero-copy">
-            <p className="eyebrow"><span /> AE Turns (Pvt) Ltd</p>
-            <h1>Innovative Digital Solutions for a <em>Smarter Future</em></h1>
-            <p className="hero-description">
-              AE Turns delivers innovative technology and digital solutions
-              designed to help businesses improve their operations, customer
-              engagement and digital experiences.
-            </p>
+            <p className="eyebrow"><span /> {content.hero.eyebrow}</p>
+            <h1>
+              {headlineWords.slice(0, headlineSplit).join(" ")}{" "}
+              <em>{headlineWords.slice(headlineSplit).join(" ")}</em>
+            </h1>
+            <p className="hero-description">{content.hero.introduction}</p>
             <div className="hero-actions">
               <Link className="button button-dark" to="/solutions">
                 Explore Our Solutions <Icon name="arrow" size={18} />
@@ -88,31 +85,26 @@ export function HomePage() {
         <div className="section-heading reveal">
           <div>
             <SectionLabel number="01">A growing journey</SectionLabel>
-            <h2>Experience since <em>2021.</em></h2>
+            <h2>Experience since <em>{content.company.establishedYear}.</em></h2>
           </div>
           <p>Our story began in 2021. Project, customer and solution figures will be shared when confirmed by the AE Turns Administration.</p>
         </div>
         <div className="highlights-grid">
-          <article className="highlight-card highlight-established reveal">
-            <span className="highlight-mark"><Icon name="clock" size={21} /></span>
-            <strong>2021</strong>
-            <span>Established</span>
-          </article>
-          <article className="highlight-card reveal">
-            <span className="highlight-mark"><Icon name="chart" size={21} /></span>
-            <strong>To be confirmed</strong>
-            <span>Successful projects</span>
-          </article>
-          <article className="highlight-card reveal">
-            <span className="highlight-mark"><Icon name="people" size={21} /></span>
-            <strong>To be confirmed</strong>
-            <span>Customers & clients</span>
-          </article>
-          <article className="highlight-card reveal">
-            <span className="highlight-mark"><Icon name="layers" size={21} /></span>
-            <strong>To be confirmed</strong>
-            <span>Solutions delivered</span>
-          </article>
+          {content.statistics.map((statistic, index) => (
+            <article
+              className={index === 0 ? "highlight-card highlight-established reveal" : "highlight-card reveal"}
+              key={statistic.label}
+            >
+              <span className="highlight-mark">
+                <Icon
+                  name={statisticIcons[index % statisticIcons.length]}
+                  size={21}
+                />
+              </span>
+              <strong>{statistic.value}</strong>
+              <span>{statistic.label}</span>
+            </article>
+          ))}
         </div>
       </section>
 
@@ -126,7 +118,7 @@ export function HomePage() {
             <p>Practical digital solutions that help businesses communicate, engage and transform.</p>
           </div>
           <div className="services-grid">
-            {services.map((service, index) => (
+            {content.services.map((service, index) => (
               <article className="service-card reveal" key={service.title}>
                 <div className="service-card-top">
                   <span className="service-number">{String(index + 1).padStart(2, "0")}</span>
@@ -159,12 +151,26 @@ export function HomePage() {
         <div className="customers-intro">
           <SectionLabel number="04">Our customers</SectionLabel>
           <h2>Built on <em>trusted relationships.</em></h2>
-          <p>Customer names and logos will be added after approval by the AE Turns Administration.</p>
+          <p>{content.customers.length === 0 ? "Customer names and logos will be added after approval by the AE Turns Administration." : "We are proud to work with these customers."}</p>
         </div>
-        <div className="customers-pending">
-          <span className="pending-spark" aria-hidden="true">✳</span>
-          <span>Customer stories are on their way</span>
-        </div>
+        {content.customers.length === 0 ? (
+          <div className="customers-pending">
+            <span className="pending-spark" aria-hidden="true">✳</span>
+            <span>Customer stories are on their way</span>
+          </div>
+        ) : (
+          <div className="customer-list">
+            {content.customers.map((customer) => (
+              <div className="customer-logo" key={customer.name}>
+                {customer.logoUrl ? (
+                  <img src={customer.logoUrl} alt={`${customer.name} logo`} />
+                ) : (
+                  <span>{customer.name}</span>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
       </section>
 
       <ContactBand />
@@ -173,6 +179,8 @@ export function HomePage() {
 }
 
 function WhyChooseSection() {
+  const { content } = useSiteContent();
+
   return (
     <section className="why-section">
       <div className="why-wrap section-wrap">
@@ -185,7 +193,7 @@ function WhyChooseSection() {
           </Link>
         </div>
         <div className="strength-list">
-          {strengths.map((strength, index) => (
+          {content.strengths.map((strength, index) => (
             <article className="strength-item reveal" key={strength.title}>
               <span className="strength-icon"><Icon name={strength.icon} size={21} /></span>
               <div>
@@ -203,6 +211,7 @@ function WhyChooseSection() {
 }
 
 export function AboutPage() {
+  const { content } = useSiteContent();
   usePageMeta(
     "About Us",
     "Learn about AE Turns (Pvt) Ltd, our story, vision, mission, operating areas and approved partners.",
@@ -219,19 +228,12 @@ export function AboutPage() {
       <section className="story-section section-wrap reveal">
         <div className="story-aside">
           <SectionLabel number="01">Our story</SectionLabel>
-          <div className="established-stamp"><span>Established</span><strong>2021</strong></div>
+          <div className="established-stamp"><span>Established</span>          <strong>{content.company.establishedYear}</strong></div>
         </div>
         <div className="story-content">
           <h2>We help businesses take their <em>next turn.</em></h2>
           <p>
-            AE Turns is a technology and digital solutions company focused on
-            delivering innovative solutions that help businesses improve
-            communication, engagement and digital operations.
-          </p>
-          <p>
-            Established in 2021, AE Turns (Pvt) Ltd brings together a range of
-            digital services—from messaging and interactive platforms to web
-            systems and value-added services.
+            {content.about.story}
           </p>
         </div>
       </section>
@@ -243,9 +245,7 @@ export function AboutPage() {
             <span className="purpose-icon"><Icon name="spark" size={22} /></span>
             <h2>A trusted partner for a <em>lasting impact.</em></h2>
             <p>
-              To become a trusted technology partner delivering innovative
-              digital solutions that create lasting value for businesses and
-              their customers.
+              {content.about.vision}
             </p>
           </article>
           <article className="purpose-card purpose-card-dark reveal">
@@ -253,9 +253,7 @@ export function AboutPage() {
             <span className="purpose-icon"><Icon name="target" size={22} /></span>
             <h2>Real solutions for <em>real challenges.</em></h2>
             <p>
-              To provide reliable, innovative and customer-focused technology
-              solutions that address real business challenges and support
-              sustainable digital growth.
+              {content.about.mission}
             </p>
           </article>
         </div>
@@ -270,7 +268,7 @@ export function AboutPage() {
           <p>Our work spans the digital products and services at the heart of customer communication and engagement.</p>
         </div>
         <div className="area-list">
-          {operatingAreas.map((area, index) => (
+          {content.operatingAreas.map((area, index) => (
             <div className="area-item reveal" key={area}>
               <span>{String(index + 1).padStart(2, "0")}</span>
               <h3>{area}</h3>
@@ -290,7 +288,7 @@ export function AboutPage() {
             <p>Our partners include the organisations listed below. Official partner logos can be added when supplied by the Administration.</p>
           </div>
           <div className="partner-list">
-            {partners.map((partner, index) => (
+            {content.partners.map((partner, index) => (
               <div className="partner-name reveal" key={partner}>
                 <span>0{index + 1}</span>
                 <strong>{partner}</strong>
@@ -305,6 +303,7 @@ export function AboutPage() {
 }
 
 export function SolutionsPage() {
+  const { content } = useSiteContent();
   usePageMeta(
     "Solutions",
     "Explore AE Turns services: messaging, lottery and gaming platforms, VAS product development, interactive platforms, digital marketing and web systems.",
@@ -330,9 +329,9 @@ export function SolutionsPage() {
         </div>
       </section>
       <section className="solutions-list section-wrap">
-        {solutions.map((solution) => (
+        {content.services.map((solution, index) => (
           <article className="solution-detail reveal" id={solutionId(solution.title)} key={solution.title}>
-            <div className="solution-number">{solution.number}</div>
+            <div className="solution-number">{String(index + 1).padStart(2, "0")}</div>
             <div className="solution-detail-icon">
               <Icon name={solution.icon} size={25} />
             </div>
@@ -351,6 +350,7 @@ export function SolutionsPage() {
 }
 
 export function CareersPage() {
+  const { content } = useSiteContent();
   usePageMeta(
     "Careers",
     "Explore careers at AE Turns. We provide opportunities to work with modern technologies and contribute to real-world projects.",
@@ -385,7 +385,7 @@ export function CareersPage() {
       </section>
       <section className="vacancies-section">
         <div className="section-wrap vacancy-list">
-          {vacancies.length === 0 ? (
+          {content.vacancies.length === 0 ? (
             <div className="vacancy-card reveal">
               <span className="vacancy-icon"><Icon name="people" size={24} /></span>
               <div>
@@ -395,7 +395,7 @@ export function CareersPage() {
               </div>
             </div>
           ) : (
-            vacancies.map((vacancy) => (
+            content.vacancies.map((vacancy) => (
               <article className="vacancy-detail reveal" key={vacancy.id}>
                 <div className="vacancy-heading">
                   <span className="eyebrow">Current opportunity</span>
@@ -419,7 +419,7 @@ export function CareersPage() {
                 <div className="vacancy-application">
                   <div>
                     <h3>Apply for this position</h3>
-                    <p>Prepare an email to {contact.email}; attach your CV before sending.</p>
+                    <p>Prepare an email to {content.company.email}; attach your CV before sending.</p>
                   </div>
                   <EmailForm kind="career" position={vacancy.title} />
                 </div>
@@ -434,6 +434,7 @@ export function CareersPage() {
 }
 
 export function ContactPage() {
+  const { content } = useSiteContent();
   usePageMeta(
     "Contact Us",
     "Contact AE Turns (Pvt) Ltd in Nugegoda by phone, email or online enquiry.",
@@ -453,27 +454,27 @@ export function ContactPage() {
           <h2>We’re here to <em>help you move forward.</em></h2>
           <p>Contact our team for information about our company and solutions.</p>
           <div className="contact-facts">
-            <a className="contact-fact" href={`tel:${contact.phoneLink}`}>
+            <a className="contact-fact" href={`tel:${content.company.phoneLink}`}>
               <span className="contact-fact-icon"><Icon name="phone" size={19} /></span>
-              <span><small>Telephone</small><strong>{contact.phone}</strong></span>
+              <span><small>Telephone</small><strong>{content.company.phone}</strong></span>
             </a>
-            <a className="contact-fact" href={`mailto:${contact.email}`}>
+            <a className="contact-fact" href={`mailto:${content.company.email}`}>
               <span className="contact-fact-icon"><Icon name="message" size={19} /></span>
-              <span><small>Email</small><strong>{contact.email}</strong></span>
+              <span><small>Email</small><strong>{content.company.email}</strong></span>
             </a>
             <div className="contact-fact">
               <span className="contact-fact-icon"><Icon name="location" size={19} /></span>
-              <span><small>Contact address</small><strong>{contact.address}</strong></span>
+              <span><small>Contact address</small><strong>{content.company.address}</strong></span>
             </div>
             <div className="contact-fact">
               <span className="contact-fact-icon"><Icon name="clock" size={19} /></span>
-              <span><small>Business hours</small><strong>{contact.hours}</strong></span>
+              <span><small>Business hours</small><strong>{content.company.businessHours}</strong></span>
             </div>
           </div>
           <div className="contact-socials">
             <span>Follow AE Turns</span>
             <div>
-              {socialLinks.map((social) => (
+              {content.socialLinks.map((social) => (
                 <a key={social.label} href={social.url} target="_blank" rel="noreferrer" aria-label={social.label}>
                   {social.label}
                 </a>
@@ -492,19 +493,19 @@ export function ContactPage() {
           <div className="location-copy">
             <SectionLabel number="02">Our location</SectionLabel>
             <h2>Find us in <em>Colombo.</em></h2>
-            <p>{contact.officeAddress}</p>
-            <a className="button button-dark" href={contact.mapUrl} target="_blank" rel="noreferrer">
+            <p>{content.company.officeAddress}</p>
+            <a className="button button-dark" href={content.company.mapUrl} target="_blank" rel="noreferrer">
               Open in Google Maps <Icon name="arrow" size={18} />
             </a>
           </div>
-          <a className="map-preview" href={contact.mapUrl} target="_blank" rel="noreferrer" aria-label="Open the supplied AE Turns location in Google Maps">
+          <a className="map-preview" href={content.company.mapUrl} target="_blank" rel="noreferrer" aria-label="Open the supplied AE Turns location in Google Maps">
             <span className="map-grid" aria-hidden="true" />
             <span className="map-road road-one" aria-hidden="true" />
             <span className="map-road road-two" aria-hidden="true" />
             <span className="map-road road-three" aria-hidden="true" />
             <span className="map-link-card">
               <span className="map-marker"><Icon name="location" size={22} /></span>
-              <span><strong>AE Turns (Pvt) Ltd</strong><small>{contact.officeAddress}</small></span>
+              <span><strong>{content.company.name}</strong><small>{content.company.officeAddress}</small></span>
               <span className="map-open">Open the supplied Google Maps location ↗</span>
             </span>
           </a>
@@ -515,6 +516,7 @@ export function ContactPage() {
 }
 
 export function PrivacyPage() {
+  const { content } = useSiteContent();
   usePageMeta("Privacy Policy", "Privacy information for the AE Turns website.");
 
   return (
@@ -536,7 +538,7 @@ export function PrivacyPage() {
         },
         {
           title: "Contact",
-          text: `For privacy questions, contact ${contact.email}.`,
+          text: `For privacy questions, contact ${content.company.email}.`,
         },
       ]}
     />
@@ -544,6 +546,7 @@ export function PrivacyPage() {
 }
 
 export function TermsPage() {
+  const { content } = useSiteContent();
   usePageMeta("Terms & Conditions", "Terms and conditions for the AE Turns website.");
 
   return (
@@ -565,7 +568,7 @@ export function TermsPage() {
         },
         {
           title: "Contact",
-          text: `For questions about these terms, contact ${contact.email}.`,
+          text: `For questions about these terms, contact ${content.company.email}.`,
         },
       ]}
     />
